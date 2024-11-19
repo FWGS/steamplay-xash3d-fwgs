@@ -2,11 +2,18 @@
 {
 	"compat_tools"
 	{
-		"fteqw_wrapper" // Internal name of this tool
+		"xash_wrapper"
 		{
 			"install_path" "."
-			"display_name" "FTEQW"
+			"display_name" "Xash3D FWGS"
 			"from_oslist"  "windows"
+			"to_oslist"    "linux"
+		}
+		"xash_wrapper_native"
+		{
+			"install_path" "."
+			"display_name" "Xash3D FWGS (for mods that have Linux support)"
+			"from_oslist"  "linux"
 			"to_oslist"    "linux"
 		}
 	}

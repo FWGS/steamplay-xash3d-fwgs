@@ -1,0 +1,8 @@
+# ignore downloaded archives
+*.tar.gz
+*.AppImage
+
+# ignore unpacked directories
+squashfs-root
+xash3d-fwgs*
+

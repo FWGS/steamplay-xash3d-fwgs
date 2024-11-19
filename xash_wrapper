@@ -1,0 +1,73 @@
+#!/bin/bash
+
+# there's run & wait-before-run, we only care about the latter.
+if [ "$1" != "wait-before-run" ]; then
+	exit
+fi
+
+# TODO: finish hlsdk-mega-build and implement this
+#get_libraries()
+#{
+#}
+
+show_message_box()
+{
+	if [ -x "$(command -v kdialog)" ]; then
+		kdialog --msgbox "$1"
+	elif [ -x "$(command -v zenity)" ]; then
+		zenity --info --tet "$1"
+	else
+		xmessage "$1"
+	fi
+}
+
+download_engine_and_unpack()
+{
+	cd "$2"
+	wget "https://github.com/FWGS/xash3d-fwgs/releases/download/continuous/$1"
+	chmod +x "$1"
+	./"$1" --appimage-extract
+	mv squashfs-root "$3"
+	rm "$1"
+}
+
+# dependency check...
+if ! [ -x "$(command -v wget)" ]; then
+	show_message_box "You don't have wget installed. Please install wget."
+	exit
+fi
+
+# we have an unknown amount of parameters, let's make sure we get them
+# make sure this is quotes, because HeXen II has a space in its path
+PARMARR=( "$@" )
+ARGLEN=${#PARMARR[@]}
+
+# get every parameter after the executable and put it into
+# its own variable to pass over later
+GAMEARGS=${PARMARR[@]:2:$ARGLEN-1}
+
+# TODO: add a logic to:
+# a) if mod has native port, download prebuilts. Prefer 64-bit if available
+# b) use existing 32-bit linux port
+# c) request Wine (or piggyback on Proton somehow?) if mod DOESN'T have native port
+# Right now only point b) is implemented as the most easiest
+
+# Compatibility tool's path
+SCRPATH="$( cd "$( dirname $(readlink -nf $0) )" && pwd )"
+
+ARCH=i386
+ENGINE=xash3d
+
+# Download latest engine build for this port
+ENGINEBUILD=xash3d-fwgs-linux-$ARCH
+APPIMAGE=xash3d-fwgs-$ARCH.AppImage
+if [ ! -d "$SCRPATH/$ENGINEBUILD" ]; then
+	download_engine_and_unpack "$APPIMAGE" "$SCRPATH" "$ENGINEBUILD"
+fi
+
+export LD_LIBRARY_PATH="$SCRPATH/$ENGINEBUILD:$LD_LIBRARY_PATH"
+export XASH3D_BASEDIR=$PWD # force tell the engine to keep this working directory
+export XASH3D_EXTRAS_PAK1="$SCRPATH/$ENGINEBUILD/valve/extras.pk3"
+
+echo "$SCRPATH/$ENGINEBUILD/$ENGINE" $GAMEARGS >> ~/log
+exec "$SCRPATH/$ENGINEBUILD/$ENGINE" -dev 2 $GAMEARGS >> ~/log
